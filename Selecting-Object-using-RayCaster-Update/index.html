@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+    <title>Loading 3D Objects from .json files - Orbit Controls - Object Selecting</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <!-- <link rel="icon" type="png" href="images/worthington_icon.png"> -->
+    <link href='https://fonts.googleapis.com/css?family=Raleway:400,300,500,600,200,100' rel='stylesheet' type='text/css'>
+    <script src="https://ajax.googleapis.com/ajax/libs/threejs/r84/three.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="https://threejs.org/examples/js/controls/OrbitControls.js"></script>
+    <script src = "https://code.jquery.com/jquery-3.2.1.min.js" type="text/javascript"></script>
+    <script src = "https://threejs.org/examples/js/renderers/Projector.js" type="text/javascript"></script>
+
+
+    <style>
+        body {
+            /* set margin to 0 and overflow to hidden, to go fullscreen */
+            margin: 0;
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Div which will hold the Output -->
+<div id="WebGL-output">
+</div>
+
+<!-- Javascript code that runs our Three.js examples -->
+<script type="text/javascript">
+//window.onload = init;
+window.addEventListener( 'load', init );
+// once everything is loaded, we run our Three.js stuff.
+    function init() 
+    {
+
+            var scene = new THREE.Scene();
+
+            var camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
+            camera.position.x = 5;
+            camera.position.y = 2;
+            camera.position.z = 5;
+            camera.lookAt(scene.position);
+
+            var renderer = new THREE.WebGLRenderer();
+            renderer.setSize( window.innerWidth, window.innerHeight );
+            renderer.setClearColor(0xdddddd);
+            document.body.appendChild( renderer.domElement );
+
+
+            var axis = new THREE.AxisHelper(10);
+            scene.add(axis);
+
+            // Orbit Control Function
+            var orbit = new THREE.OrbitControls(camera);
+            orbit.damping = 0.2;
+            orbit.minDistance = 2;
+            orbit.maxDistance = 40;
+
+
+            // Loading 3D Model (.json) and Selecting Object
+            // Need to pick object mesh names from scene.json files.
+            var object1;
+            var object2;
+            var loader = new THREE.ObjectLoader();
+            loader.load("SimpleScene/scene.json",function ( obj ) {
+                object1 = obj.getObjectByName( "Big Cube_SubMesh 0", true );
+                object2 = obj.getObjectByName( "Small Cube_SubMesh 0", true );
+                object3 = obj.getObjectByName( "Ground_SubMesh 0", true );
+            obj.traverse( function ( child ) {
+            });
+             scene.add( obj );
+             obj.scale.set( 2, 2, 2 );
+            });
+
+
+
+            // HTML5 DIV Loader...
+            document.getElementById("WebGL-output").appendChild(renderer.domElement);
+
+            // 3D World responsive function 
+            function onWindowResize() 
+            {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize( window.innerWidth, window.innerHeight );
+            }
+
+            render();
+            // WebGL Renderer...
+            function render() 
+            {
+             // render using requestAnimationFrame
+                requestAnimationFrame(render);
+                renderer.render(scene, camera);
+                orbit.update();
+                window.addEventListener( 'resize', onWindowResize, false );
+            }
+
+            // Selecting a 3D Object by using Raycaster
+            var projector = new THREE.Projector();
+            var raycaster = new THREE.Raycaster();
+            var mouse = new THREE.Vector2();
+            var moved = false;
+            var intersection = {intersects: false};
+            window.addEventListener('mouseup', onDocumentMouseUp, false);
+            window.addEventListener('mousedown', onDocumentMouseDown, false);
+            window.addEventListener( 'mousemove', onTouchMove );
+            window.addEventListener( 'touchmove', onTouchMove );
+
+            function onDocumentMouseUp(event) 
+            {
+
+                raycaster.setFromCamera( mouse, camera );
+                var intersects = raycaster.intersectObjects([object1, object2, object3]);
+
+                if (intersects.length > 0 && !moved && intersects) 
+                {
+                    console.log(intersects[0]);
+                    intersects[0].object.material.transparent = true;
+                    intersects[0].object.material.opacity = 0.1;
+                    intersection.intersects = true;
+                }
+                else
+                {
+                    intersection.intersects = false;
+                }
+            }
+            orbit.addEventListener( 'change', function() {
+                moved = true;
+            } );
+            function onDocumentMouseDown(event) 
+            {
+                moved = false;
+            }
+            function onTouchMove( event ) {
+                if ( event.changedTouches ) {
+                    x = event.changedTouches[ 0 ].pageX;
+                    y = event.changedTouches[ 0 ].pageY;
+                } else {
+                    x = event.clientX;
+                    y = event.clientY;
+                }
+                mouse.x = ( x / window.innerWidth ) * 2 - 1;
+                mouse.y = - ( y / window.innerHeight ) * 2 + 1;
+            }
+
+    }
+
+
+
+</script>
+</body>
+</html>
